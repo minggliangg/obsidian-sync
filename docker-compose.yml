@@ -1,0 +1,20 @@
+services:
+  couchdb:
+    image: couchdb:3.5
+    container_name: obsidian-couchdb
+    restart: unless-stopped
+    environment:
+      COUCHDB_USER: ${COUCHDB_ADMIN_USER}
+      COUCHDB_PASSWORD: ${COUCHDB_ADMIN_PASSWORD}
+    volumes:
+      # Point DATA_DIR at the SSD, not the SD card
+      - ${DATA_DIR:-./data}:/opt/couchdb/data
+      - ./local.ini:/opt/couchdb/etc/local.d/10-livesync.ini:ro
+    ports:
+      # Localhost only. Tailscale serve handles HTTPS + remote access.
+      - "127.0.0.1:5984:5984"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:5984/_up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
